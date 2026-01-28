@@ -413,6 +413,68 @@
   text-align: right;
 }
 
+.mealsCard {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  padding: 14px 14px 12px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mealsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.mealBadges {
+  display: flex;
+  gap: 6px;
+}
+
+.mealItem {
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  background: #f8fafc;
+}
+
+.mealTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.mealLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #16a34a;
+  text-transform: uppercase;
+}
+
+.mealName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.mealDesc {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.mealNotes {
+  font-size: 11px;
+  color: #0f766e;
+  margin-top: 4px;
+}
+
 @keyframes shellFadeIn {
   from {
     opacity: 0;

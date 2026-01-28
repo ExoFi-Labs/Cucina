@@ -9,6 +9,9 @@ export default function Home() {
   const router = useRouter();
   const [profile, setProfile] = useState(null);
   const [todayItems, setTodayItems] = useState([]);
+  const [meals, setMeals] = useState([]);
+  const [mealsLoading, setMealsLoading] = useState(false);
+  const [mealsError, setMealsError] = useState("");
 
   useEffect(() => {
     const p = loadProfile();
@@ -40,6 +43,27 @@ export default function Home() {
 
   function handleAddToToday(item) {
     setTodayItems((prev) => [...prev, item]);
+  }
+
+  async function refreshMeals() {
+    if (!profile) return;
+    setMealsLoading(true);
+    setMealsError("");
+    try {
+      const res = await fetch("/api/meal-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profile, todayItems }),
+      });
+      if (!res.ok) throw new Error("Failed to fetch meals");
+      const data = await res.json();
+      setMeals(data.meals ?? []);
+    } catch (e) {
+      console.error(e);
+      setMealsError("Could not load suggestions right now.");
+    } finally {
+      setMealsLoading(false);
+    }
   }
 
   return (
@@ -141,7 +165,14 @@ export default function Home() {
               totals={totals}
               target={profile?.targetCalories}
             />
-            <p className={styles.footnote}>Early prototype – more guidance coming.</p>
+            <MealSuggestions
+              meals={meals}
+              loading={mealsLoading}
+              error={mealsError}
+              onRefresh={refreshMeals}
+              hasProfile={!!profile}
+            />
+            <p className={styles.footnote}>Prototype – tuning the coach as we go.</p>
           </div>
         </section>
       </main>
@@ -370,6 +401,53 @@ function ClientResults({ results, onAddToToday }) {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function MealSuggestions({ meals, loading, error, onRefresh, hasProfile }) {
+  return (
+    <div className={styles.mealsCard}>
+      <div className={styles.mealsHeader}>
+        <span>Today&apos;s meal suggestions</span>
+        <div className={styles.mealBadges}>
+          {hasProfile && (
+            <button
+              type="button"
+              className={styles.searchButton}
+              style={{ paddingInline: 12, height: 30, fontSize: 12 }}
+              onClick={onRefresh}
+              disabled={loading}
+            >
+              {loading ? "Thinking…" : "Refresh"}
+            </button>
+          )}
+        </div>
+      </div>
+      {error && <p className={styles.statusText}>{error}</p>}
+      {!loading && (!meals || meals.length === 0) && (
+        <p className={styles.emptyState}>
+          Tap &quot;Refresh&quot; to get 3–4 simple ideas that fit your goal and diet.
+        </p>
+      )}
+      {meals &&
+        meals.map((meal, idx) => (
+          <div key={idx} className={styles.mealItem}>
+            <div className={styles.mealTitleRow}>
+              <span className={styles.mealLabel}>{meal.label || "Meal"}</span>
+              {typeof meal.approxCalories === "number" && (
+                <span className={styles.macroTag}>
+                  ~{Math.round(meal.approxCalories)} kcal
+                </span>
+              )}
+            </div>
+            <div className={styles.mealName}>{meal.name}</div>
+            {meal.description && (
+              <p className={styles.mealDesc}>{meal.description}</p>
+            )}
+            {meal.notes && <p className={styles.mealNotes}>{meal.notes}</p>}
+          </div>
+        ))}
     </div>
   );
 }

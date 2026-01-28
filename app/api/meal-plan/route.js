@@ -20,47 +20,43 @@ export async function POST(req) {
   }
 
   const body = await req.json();
-  const query = (body.query || "").trim();
   const profile = body.profile || null;
+  const todayItems = Array.isArray(body.todayItems) ? body.todayItems : [];
 
-  if (!query) {
-    return NextResponse.json({ error: "Missing query" }, { status: 400 });
+  if (!profile) {
+    return NextResponse.json(
+      { error: "Profile is required to generate a meal plan." },
+      { status: 400 },
+    );
   }
 
   const url = `https://${endpoint}/v1/projects/${projectId}/locations/${region}/endpoints/openapi/chat/completions`;
 
   const systemPrompt = `
-You are a nutrition assistant. The user will describe foods they ate or want to eat.
-You may also be given a brief profile describing their goal, eating style and daily target calories.
-Use the profile only as background context, not as something to restate.
+You are a calm, practical nutrition coach.
+Create simple daily meal ideas that align with the user's profile.
 
 Return STRICT JSON only, no extra text, in this shape:
 
 {
-  "items": [
+  "meals": [
     {
-      "name": "string",
-      "approxCaloriesPer100g": number | null,
-      "approxProteinPer100g": number | null,
-      "approxCarbsPer100g": number | null,
-      "approxFatPer100g": number | null,
-      "notes": "short clarification or assumption"
+      "label": "Breakfast" | "Lunch" | "Dinner" | "Snack",
+      "name": "short meal name",
+      "description": "1–2 friendly sentences about the meal",
+      "approxCalories": number | null,
+      "notes": "short note on why it fits the profile"
     }
   ]
 }
 
-Important behaviour:
-- Always respond with valid JSON that can be parsed directly.
-- If you are unsure about any nutrient, set its field to null instead of guessing.
-- If the user mentions a single mixed meal (e.g. "2 eggs and toast with butter"),
-  you may return multiple items (e.g. "eggs", "toast with butter").
-- If the user types a generic food without preparation (e.g. "egg", "steak", "chicken", "rice"),
-  return 3–5 of the most common variants as SEPARATE items, such as:
-  - "egg, scrambled in butter"
-  - "egg, fried in oil"
-  - "egg, boiled"
-  - "egg, poached"
-- Each item.name should be a short, human-readable description that clearly distinguishes the variant.
+Rules:
+- Use the profile's goal, diet style and target calories to guide choices.
+- Respect any foods to avoid if present (dislikes).
+- Assume the user has basic cooking skills and limited time on weekdays.
+- If todayItems are provided, try to balance the remaining meals so the day
+  roughly lands near the target calories instead of repeating the same macros.
+- Prefer simple, realistic meals over elaborate recipes.
 `;
 
   const payload = {
@@ -68,13 +64,21 @@ Important behaviour:
     stream: false,
     messages: [
       { role: "system", content: systemPrompt },
-      profile
+      {
+        role: "system",
+        content: `User profile JSON:\n${JSON.stringify(profile)}`,
+      },
+      todayItems.length
         ? {
             role: "system",
-            content: `User profile JSON:\n${JSON.stringify(profile)}`,
+            content: `Foods already eaten today (approx):\n${JSON.stringify(todayItems)}`,
           }
         : null,
-      { role: "user", content: query },
+      {
+        role: "user",
+        content:
+          "Propose 3–4 meal ideas for the rest of today that align with this profile.",
+      },
     ].filter(Boolean),
   };
 
@@ -89,9 +93,9 @@ Important behaviour:
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    console.error("Llama API error", res.status, text);
+    console.error("Llama meal-plan API error", res.status, text);
     return NextResponse.json(
-      { error: "Llama 4 API request failed" },
+      { error: "Llama 4 meal-plan request failed" },
       { status: 502 },
     );
   }
@@ -107,15 +111,15 @@ Important behaviour:
   try {
     parsed = typeof content === "string" ? JSON.parse(content) : content;
   } catch (e) {
-    console.error("Failed to parse model JSON", e, content);
+    console.error("Failed to parse meal-plan JSON", e, content);
     return NextResponse.json(
       { error: "Model did not return valid JSON" },
       { status: 500 },
     );
   }
 
-  const items = Array.isArray(parsed.items) ? parsed.items : [];
+  const meals = Array.isArray(parsed.meals) ? parsed.meals : [];
 
-  return NextResponse.json({ items });
+  return NextResponse.json({ meals });
 }
 
