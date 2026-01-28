@@ -1,9 +1,47 @@
 "use client";
 
 import styles from "./page.module.css";
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { loadProfile } from "../lib/profileStorage";
 
 export default function Home() {
+  const router = useRouter();
+  const [profile, setProfile] = useState(null);
+  const [todayItems, setTodayItems] = useState([]);
+
+  useEffect(() => {
+    const p = loadProfile();
+    if (!p) {
+      router.push("/survey");
+      return;
+    }
+    setProfile(p);
+  }, [router]);
+
+  const totals = todayItems.reduce(
+    (acc, item) => {
+      if (typeof item.approxCaloriesPer100g === "number") {
+        acc.kcal += item.approxCaloriesPer100g;
+      }
+      if (typeof item.approxProteinPer100g === "number") {
+        acc.protein += item.approxProteinPer100g;
+      }
+      if (typeof item.approxCarbsPer100g === "number") {
+        acc.carbs += item.approxCarbsPer100g;
+      }
+      if (typeof item.approxFatPer100g === "number") {
+        acc.fat += item.approxFatPer100g;
+      }
+      return acc;
+    },
+    { kcal: 0, protein: 0, carbs: 0, fat: 0 },
+  );
+
+  function handleAddToToday(item) {
+    setTodayItems((prev) => [...prev, item]);
+  }
+
   return (
     <div className={styles.page}>
       <main className={styles.shell}>
@@ -33,6 +71,19 @@ export default function Home() {
               Llama 4 to understand it and estimate calories and macros you can
               build on.
             </p>
+            {profile && (
+              <p className={styles.heroSubtitle}>
+                Today&apos;s gentle target:{" "}
+                <strong>
+                  ~{profile.targetCalories} kcal
+                </strong>{" "}
+                for{" "}
+                <strong>
+                  {profile.goal} / {profile.diet}
+                </strong>
+                .
+              </p>
+            )}
             <div className={styles.chips}>
               <span className={`${styles.chip} ${styles.chipAccent}`}>
                 Fresh green, science‑backed
@@ -42,7 +93,7 @@ export default function Home() {
             </div>
 
             <Suspense fallback={null}>
-              <SearchCard />
+              <SearchCard profile={profile} onAddToToday={handleAddToToday} />
             </Suspense>
           </div>
 
@@ -82,7 +133,7 @@ export default function Home() {
                 <span className={styles.tinyBadge}>Numbers are estimates</span>
               </div>
             </div>
-            <SearchResultsPreview />
+            <TodayPanel totals={totals} target={profile?.targetCalories} />
             <p className={styles.footnote}>
               Early prototype – we&apos;ll add your survey, recipes and daily
               coaching flows next.
@@ -94,27 +145,43 @@ export default function Home() {
   );
 }
 
-function SearchResultsPreview() {
+function TodayPanel({ totals, target }) {
+  const remaining =
+    typeof target === "number" ? Math.max(target - totals.kcal, 0) : null;
+
   return (
     <div className={styles.resultsCard}>
       <div className={styles.resultsHeader}>
-        <span>Recent matches</span>
-        <span className={styles.resultsBadge}>Live from Open Food Facts</span>
+        <span>Today&apos;s log (100g basis)</span>
+        {typeof target === "number" && (
+          <span className={styles.resultsBadge}>
+            Target ~{Math.round(target)} kcal
+          </span>
+        )}
       </div>
-      <SearchResults />
+      <div className={styles.resultBody}>
+        <div className={styles.resultMeta}>
+          <span className={styles.macroTag}>
+            {Math.round(totals.kcal)} kcal logged
+          </span>
+          <span className={styles.macroTagSoft}>
+            {totals.protein.toFixed(1)} g protein
+          </span>
+          <span className={styles.macroTag}>{totals.carbs.toFixed(1)} g carbs</span>
+          <span className={styles.macroTag}>{totals.fat.toFixed(1)} g fat</span>
+        </div>
+        {typeof remaining === "number" && (
+          <p className={styles.statusText}>
+            Roughly <strong>{Math.round(remaining)} kcal</strong> left in today&apos;s
+            target.
+          </p>
+        )}
+      </div>
     </div>
   );
 }
 
-function SearchResults() {
-  return (
-    <p className={styles.emptyState}>
-      Start typing on the left to see energy and macros here.
-    </p>
-  );
-}
-
-function SearchCard() {
+function SearchCard({ profile, onAddToToday }) {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -133,7 +200,7 @@ function SearchCard() {
       const res = await fetch("/api/llama-food", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: query.trim() }),
+        body: JSON.stringify({ query: query.trim(), profile: profile || null }),
       });
       if (!res.ok) {
         throw new Error("Search failed");
@@ -174,20 +241,25 @@ function SearchCard() {
             {loading ? "Searching…" : "Search"}
           </button>
         </div>
-        <div className={styles.metaRow}>
-          <span>
-            Uses Open Food Facts. <strong>No account needed.</strong>
-          </span>
-          <span>We&apos;ll turn this into a full log &amp; coach next.</span>
-        </div>
+        {profile && (
+          <div className={styles.metaRow}>
+            <span>
+              Goal: <strong>{profile.goal}</strong>, style:{" "}
+              <strong>{profile.diet}</strong>.
+            </span>
+            <span>
+              Approx. target: <strong>{profile.targetCalories} kcal</strong>.
+            </span>
+          </div>
+        )}
         {error && <p className={styles.statusText}>{error}</p>}
       </form>
-      <ClientResults results={results} />
+      <ClientResults results={results} onAddToToday={onAddToToday} />
     </>
   );
 }
 
-function ClientResults({ results }) {
+function ClientResults({ results, onAddToToday }) {
   if (!results || results.length === 0) {
     return (
       <p className={styles.emptyState}>
@@ -234,6 +306,18 @@ function ClientResults({ results }) {
                 </span>
               )}
             </div>
+            {onAddToToday && (
+              <div style={{ marginTop: 4 }}>
+                <button
+                  type="button"
+                  className={styles.searchButton}
+                  style={{ paddingInline: 12, height: 30, fontSize: 12 }}
+                  onClick={() => onAddToToday(item)}
+                >
+                  Add to today
+                </button>
+              </div>
+            )}
           </div>
         </div>
       ))}

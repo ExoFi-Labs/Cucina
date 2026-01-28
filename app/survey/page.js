@@ -1,7 +1,9 @@
 "use client";
 
 import styles from "../page.module.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { saveProfile, loadProfile } from "../../lib/profileStorage";
 
 const goals = [
   { id: "lose", label: "Lose body weight" },
@@ -28,6 +30,15 @@ export default function SurveyPage() {
   const [saving, setSaving] = useState(false);
   const [summary, setSummary] = useState(null);
 
+  const router = useRouter();
+
+  useEffect(() => {
+    const existing = loadProfile();
+    if (existing) {
+      setSummary(existing);
+    }
+  }, []);
+
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
@@ -40,7 +51,7 @@ export default function SurveyPage() {
 
     const targetCalories = base + goalAdjust + activityAdjust;
 
-    setSummary({
+    const profile = {
       goal,
       diet,
       dislikes,
@@ -48,9 +59,15 @@ export default function SurveyPage() {
       weight,
       activity,
       targetCalories,
-    });
+    };
 
-    setSaving(false);
+    setSummary(profile);
+    saveProfile(profile);
+
+    setTimeout(() => {
+      setSaving(false);
+      router.push("/");
+    }, 400);
   }
 
   return (

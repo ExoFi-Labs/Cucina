@@ -3,20 +3,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px 16px;
+  padding: 32px 24px;
 }
 
 .shell {
   width: 100%;
-  max-width: 1180px;
+  max-width: 1720px;
   background: linear-gradient(135deg, #ecfdf3, #ffffff);
-  border-radius: 32px;
-  padding: 28px 28px 32px;
+  border-radius: 28px;
+  padding: 36px 48px 40px;
+  /* Give the card presence without touching top/bottom edges */
+  min-height: 72vh;
   box-shadow: var(--shadow-soft);
   border: 1px solid rgba(34, 197, 94, 0.12);
   display: flex;
   flex-direction: column;
   gap: 24px;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: shellFadeIn 320ms ease-out forwards;
 }
 
 .headerRow {
@@ -46,13 +51,13 @@
 }
 
 .brandText h1 {
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 650;
   letter-spacing: -0.03em;
 }
 
 .brandText p {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--color-text-muted);
 }
 
@@ -64,7 +69,7 @@
   border-radius: 999px;
   background-color: rgba(22, 163, 74, 0.07);
   color: #166534;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -89,15 +94,15 @@
 }
 
 .heroTitle {
-  font-size: 26px;
-  line-height: 1.15;
+  font-size: 32px;
+  line-height: 1.2;
   font-weight: 700;
   letter-spacing: -0.03em;
 }
 
 .heroSubtitle {
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.6;
   color: var(--color-text-muted);
 }
 
@@ -109,7 +114,7 @@
 }
 
 .chip {
-  font-size: 11px;
+  font-size: 12px;
   padding: 4px 10px;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.45);
@@ -128,7 +133,7 @@
   background: rgba(255, 255, 255, 0.9);
   border-radius: 22px;
   border: 1px solid var(--color-border-subtle);
-  padding: 16px 16px 14px;
+  padding: 18px 18px 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -138,7 +143,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .searchHeader span {
@@ -146,7 +151,7 @@
 }
 
 .searchBadge {
-  font-size: 11px;
+  font-size: 12px;
   padding: 4px 10px;
   border-radius: 999px;
   background: #ecfdf3;
@@ -186,7 +191,7 @@
   flex: 1;
   border: none;
   background: transparent;
-  font-size: 14px;
+  font-size: 15px;
   color: #0f172a;
 }
 
@@ -201,8 +206,8 @@
 .searchButton {
   border: none;
   border-radius: 999px;
-  padding: 0 18px;
-  font-size: 14px;
+  padding: 0 22px;
+  font-size: 15px;
   font-weight: 600;
   background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
   color: #ecfdf3;
@@ -229,7 +234,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--color-text-muted);
 }
 
@@ -239,10 +244,10 @@
 }
 
 .resultsCard {
-  background: #0f172a;
-  color: #e2e8f0;
+  background: #020617;
+  color: #f9fafb;
   border-radius: 22px;
-  padding: 16px 16px 14px;
+  padding: 18px 18px 16px;
   box-shadow: 0 16px 40px rgba(15, 23, 42, 0.55);
   position: relative;
   overflow: hidden;
@@ -252,12 +257,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 13px;
+  font-size: 14px;
   margin-bottom: 10px;
 }
 
 .resultsBadge {
-  font-size: 11px;
+  font-size: 12px;
   padding: 3px 10px;
   border-radius: 999px;
   background: rgba(15, 118, 110, 0.95);
@@ -267,8 +272,8 @@
 .resultsList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 230px;
+  gap: 10px;
+  max-height: 320px;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -276,21 +281,21 @@
 .resultItem {
   display: flex;
   gap: 10px;
-  padding: 8px 9px;
+  padding: 10px 12px;
   border-radius: 14px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(30, 64, 175, 0.8);
+  background: #020617;
+  border: 1px solid #1f2937;
 }
 
 .resultImage {
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   border-radius: 999px;
   background: radial-gradient(circle at 10% 0, #4ade80, #15803d);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: #ecfdf3;
 }
@@ -309,13 +314,14 @@
 }
 
 .resultName {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
+  color: #f9fafb;
 }
 
 .resultBrand {
-  font-size: 11px;
-  color: #a5b4fc;
+  font-size: 12px;
+  color: #9ca3af;
 }
 
 .resultMeta {
@@ -326,26 +332,26 @@
 }
 
 .macroTag {
-  font-size: 11px;
+  font-size: 12px;
   padding: 2px 7px;
   border-radius: 999px;
-  background: rgba(30, 64, 175, 0.9);
-  color: #bfdbfe;
-}
-
-.macroTagSoft {
-  background: rgba(15, 118, 110, 0.92);
+  background: rgba(45, 212, 191, 0.14);
   color: #a5f3fc;
 }
 
+.macroTagSoft {
+  background: rgba(34, 197, 94, 0.22);
+  color: #bbf7d0;
+}
+
 .statusText {
-  font-size: 12px;
+  font-size: 13px;
   color: #cbd5f5;
   margin-top: 4px;
 }
 
 .emptyState {
-  font-size: 12px;
+  font-size: 13px;
   color: #9ca3af;
   margin-top: 6px;
 }
@@ -361,12 +367,12 @@
   border-radius: 22px;
   border: 1px solid rgba(148, 163, 184, 0.3);
   padding: 14px 14px 12px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--color-text-muted);
 }
 
 .panel h3 {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--color-text-main);
   margin-bottom: 4px;
@@ -392,7 +398,7 @@
 }
 
 .tinyBadge {
-  font-size: 10px;
+  font-size: 11px;
   padding: 3px 7px;
   border-radius: 999px;
   background: rgba(56, 189, 248, 0.08);
@@ -402,14 +408,25 @@
 }
 
 .footnote {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--color-text-muted);
   text-align: right;
 }
 
+@keyframes shellFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 768px) {
   .shell {
-    padding: 22px 18px 22px;
+    padding: 22px 16px 22px;
     border-radius: 24px;
   }
 
@@ -423,6 +440,6 @@
   }
 
   .heroTitle {
-    font-size: 22px;
+    font-size: 24px;
   }
 }

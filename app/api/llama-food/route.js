@@ -23,6 +23,7 @@ export async function POST(req) {
 
   const body = await req.json();
   const query = (body.query || "").trim();
+  const profile = body.profile || null;
 
   if (!query) {
     return NextResponse.json({ error: "Missing query" }, { status: 400 });
@@ -32,6 +33,9 @@ export async function POST(req) {
 
   const systemPrompt = `
 You are a nutrition assistant. The user will describe foods they ate or want to eat.
+You may also be given a brief profile describing their goal, eating style and daily target calories.
+Use the profile only as background context, not as something to restate.
+
 Return STRICT JSON only, no extra text, in this shape:
 
 {
@@ -59,8 +63,14 @@ Rules:
     stream: false,
     messages: [
       { role: "system", content: systemPrompt },
+      profile
+        ? {
+            role: "system",
+            content: `User profile JSON:\n${JSON.stringify(profile)}`,
+          }
+        : null,
       { role: "user", content: query },
-    ],
+    ].filter(Boolean),
   };
 
   const res = await fetch(url, {
