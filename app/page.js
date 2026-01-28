@@ -98,22 +98,25 @@ export default function Home() {
           </div>
 
           <div className={styles.rightCol}>
-            <div className={styles.panel}>
-              <h3>Step 1: Your survey</h3>
-              <p>
-                Before we can really coach you, we&apos;ll ask a few quick questions
-                about your goals, how you like to eat and your typical day.
-              </p>
-              <p style={{ marginTop: 8 }}>
-                It&apos;s optional, but it&apos;s what will power personalised
-                calorie targets and recipe suggestions.
-              </p>
-              <div className={styles.badgeRow} style={{ marginTop: 10 }}>
-                <a href="/survey" className={styles.searchButton}>
-                  Fill out the survey
-                </a>
+            {!profile && (
+              <div className={styles.panel}>
+                <h3>Step 1: Your survey</h3>
+                <p>
+                  Before we can really coach you, we&apos;ll ask a few quick
+                  questions about your goals, how you like to eat and your typical
+                  day.
+                </p>
+                <p style={{ marginTop: 8 }}>
+                  It&apos;s optional, but it&apos;s what will power personalised
+                  calorie targets and recipe suggestions.
+                </p>
+                <div className={styles.badgeRow} style={{ marginTop: 10 }}>
+                  <a href="/survey" className={styles.searchButton}>
+                    Fill out the survey
+                  </a>
+                </div>
               </div>
-            </div>
+            )}
             <div className={styles.panel}>
               <h3>What this screen does</h3>
               <p>
@@ -133,11 +136,12 @@ export default function Home() {
                 <span className={styles.tinyBadge}>Numbers are estimates</span>
               </div>
             </div>
-            <TodayPanel totals={totals} target={profile?.targetCalories} />
-            <p className={styles.footnote}>
-              Early prototype – we&apos;ll add your survey, recipes and daily
-              coaching flows next.
-            </p>
+            <TodayPanel
+              items={todayItems}
+              totals={totals}
+              target={profile?.targetCalories}
+            />
+            <p className={styles.footnote}>Early prototype – more guidance coming.</p>
           </div>
         </section>
       </main>
@@ -145,7 +149,7 @@ export default function Home() {
   );
 }
 
-function TodayPanel({ totals, target }) {
+function TodayPanel({ items, totals, target }) {
   const remaining =
     typeof target === "number" ? Math.max(target - totals.kcal, 0) : null;
 
@@ -175,6 +179,51 @@ function TodayPanel({ totals, target }) {
             Roughly <strong>{Math.round(remaining)} kcal</strong> left in today&apos;s
             target.
           </p>
+        )}
+        {items && items.length > 0 && (
+          <div
+            className={styles.resultsList}
+            style={{ marginTop: 10, maxHeight: 220 }}
+          >
+            {items.map((item, index) => (
+              <div key={index} className={styles.resultItem}>
+                <div className={styles.resultBody}>
+                  <div className={styles.resultTitleRow}>
+                    <div>
+                      <div className={styles.resultName}>{item.name}</div>
+                      {item.notes && (
+                        <div className={styles.resultBrand}>{item.notes}</div>
+                      )}
+                    </div>
+                  </div>
+                  <div className={styles.resultMeta}>
+                    {typeof item.approxCaloriesPer100g === "number" && (
+                      <span className={styles.macroTag}>
+                        {Math.round(item.approxCaloriesPer100g)} kcal / 100g
+                      </span>
+                    )}
+                    {typeof item.approxProteinPer100g === "number" && (
+                      <span
+                        className={`${styles.macroTag} ${styles.macroTagSoft}`}
+                      >
+                        {item.approxProteinPer100g.toFixed(1)} g protein / 100g
+                      </span>
+                    )}
+                    {typeof item.approxCarbsPer100g === "number" && (
+                      <span className={styles.macroTag}>
+                        {item.approxCarbsPer100g.toFixed(1)} g carbs / 100g
+                      </span>
+                    )}
+                    {typeof item.approxFatPer100g === "number" && (
+                      <span className={styles.macroTag}>
+                        {item.approxFatPer100g.toFixed(1)} g fat / 100g
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

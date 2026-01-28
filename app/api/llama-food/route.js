@@ -51,11 +51,18 @@ Return STRICT JSON only, no extra text, in this shape:
   ]
 }
 
-Rules:
+Important behaviour:
 - Always respond with valid JSON that can be parsed directly.
 - If you are unsure about any nutrient, set its field to null instead of guessing.
 - If the user mentions a single mixed meal (e.g. "2 eggs and toast with butter"),
   you may return multiple items (e.g. "eggs", "toast with butter").
+- If the user types a generic food without preparation (e.g. "egg", "steak", "chicken", "rice"),
+  return 3–5 of the most common variants as SEPARATE items, such as:
+  - "egg, scrambled in butter"
+  - "egg, fried in oil"
+  - "egg, boiled"
+  - "egg, poached"
+- Each item.name should be a short, human-readable description that clearly distinguishes the variant.
 `;
 
   const payload = {
