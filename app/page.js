@@ -116,7 +116,7 @@ export default function Home() {
             <h2 className={styles.heroTitle}>
               Find foods, track your day,
               <br />
-              and get gentle nudges in the right direction.
+              and get clear, practical guidance.
             </h2>
             <p className={styles.heroSubtitle}>
               Start by searching for something you ate today. We&apos;ll use
@@ -125,7 +125,7 @@ export default function Home() {
             </p>
             {profile && (
               <p className={styles.heroSubtitle}>
-                Today&apos;s gentle target:{" "}
+                Today&apos;s focus:{" "}
                 <strong>
                   ~{profile.targetCalories} kcal
                 </strong>{" "}
