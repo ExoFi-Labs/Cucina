@@ -27,7 +27,8 @@ const diets = [
   "Whole foods / unprocessed",
 ];
 
-export default function SurveyPage() {
+export default function SettingsPage() {
+  const router = useRouter();
   const [goal, setGoal] = useState("lose");
   const [diet, setDiet] = useState("No preference");
   const [dislikes, setDislikes] = useState("");
@@ -37,22 +38,31 @@ export default function SurveyPage() {
   const [cookingTime, setCookingTime] = useState("medium");
   const [mealPrep, setMealPrep] = useState("sometimes");
   const [saving, setSaving] = useState(false);
-  const [summary, setSummary] = useState(null);
-
-  const router = useRouter();
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     const existing = loadProfile();
-    if (existing) {
-      setSummary(existing);
+    if (!existing) {
+      router.push("/survey");
+      return;
     }
-  }, []);
+    // Load existing values
+    setGoal(existing.goal || "lose");
+    setDiet(existing.diet || "No preference");
+    setDislikes(existing.dislikes || "");
+    setHeight(existing.height || "");
+    setWeight(existing.weight || "");
+    setActivity(existing.activity || "moderate");
+    setCookingTime(existing.cookingTime || "medium");
+    setMealPrep(existing.mealPrep || "sometimes");
+  }, [router]);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
+    setSaved(false);
 
-    // For now, just compute a very simple target and keep it client-side.
+    // Recalculate target calories
     const base = 2000;
     const goalAdjust = goal === "lose" ? -300 : goal === "gain" ? 300 : 0;
     const activityAdjust =
@@ -72,13 +82,13 @@ export default function SurveyPage() {
       targetCalories,
     };
 
-    setSummary(profile);
     saveProfile(profile);
+    setSaving(false);
+    setSaved(true);
 
     setTimeout(() => {
-      setSaving(false);
       router.push("/");
-    }, 400);
+    }, 1000);
   }
 
   return (
@@ -88,13 +98,13 @@ export default function SurveyPage() {
           <div className={styles.brand}>
             <div className={styles.logoDot}>C</div>
             <div className={styles.brandText}>
-              <h1>Cucina</h1>
-              <p>Tell us how you like to eat.</p>
+              <h1>Settings</h1>
+              <p>Update your preferences anytime.</p>
             </div>
           </div>
           <div className={styles.tagline}>
             <span className={styles.pillDot} />
-            This survey will power your plans.
+            Changes save automatically
           </div>
         </header>
 
@@ -166,10 +176,9 @@ export default function SurveyPage() {
             </div>
 
             <div className={styles.panel}>
-              <h3>Optional body data</h3>
+              <h3>Body data</h3>
               <p>
-                You can skip this for now. It just helps us estimate calories a
-                bit better.
+                Optional – helps us estimate calories more accurately.
               </p>
               <div
                 style={{
@@ -275,59 +284,43 @@ export default function SurveyPage() {
               </select>
             </div>
 
-            <button
-              type="submit"
-              className={styles.searchButton}
-              disabled={saving}
-              style={{ alignSelf: "flex-end", marginTop: 4 }}
-            >
-              {saving ? "Saving…" : "Save survey"}
-            </button>
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <button
+                type="submit"
+                className={styles.searchButton}
+                disabled={saving}
+                style={{ alignSelf: "flex-end", marginTop: 4 }}
+              >
+                {saving ? "Saving…" : "Save changes"}
+              </button>
+              {saved && (
+                <span style={{ fontSize: 13, color: "#16a34a", fontWeight: 500 }}>
+                  ✓ Saved! Redirecting…
+                </span>
+              )}
+            </div>
           </form>
 
           <div className={styles.heroCopy}>
             <h2 className={styles.heroTitle}>
-              Your plan starts with
+              Adjust your profile
               <br />
-              how you actually live.
+              whenever you need to.
             </h2>
             <p className={styles.heroSubtitle}>
-              We&apos;ll use these answers to set a gentle calorie target and
-              shape recipes and suggestions that feel realistic, not rigid.
+              Your meal suggestions and calorie targets will update automatically
+              based on these preferences. Change them as your goals or lifestyle
+              shifts.
             </p>
-
-            {summary && (
-              <div className={styles.resultsCard}>
-                <div className={styles.resultsHeader}>
-                  <span>Your current profile</span>
-                  <span className={styles.resultsBadge}>
-                    Draft guidance target
-                  </span>
-                </div>
-                <div className={styles.resultBody}>
-                  <div className={styles.resultMeta}>
-                    <span className={styles.macroTag}>
-                      Goal: {summary.goal}
-                    </span>
-                    <span className={styles.macroTagSoft}>
-                      Eating style: {summary.diet}
-                    </span>
-                    <span className={styles.macroTag}>
-                      Target: ~{summary.targetCalories} kcal / day
-                    </span>
-                  </div>
-                  {summary.dislikes && (
-                    <p className={styles.statusText}>
-                      Avoid: {summary.dislikes}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
+            <div className={styles.chips}>
+              <span className={`${styles.chip} ${styles.chipAccent}`}>
+                All changes saved locally
+              </span>
+              <span className={styles.chip}>No account needed</span>
+            </div>
           </div>
         </section>
       </main>
     </div>
   );
 }
-

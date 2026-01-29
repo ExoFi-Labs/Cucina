@@ -22,6 +22,34 @@ export default function Home() {
     setProfile(p);
   }, [router]);
 
+  useEffect(() => {
+    // Auto-load meal suggestions when profile becomes available
+    if (profile) {
+      refreshMeals();
+    }
+  }, [profile]);
+
+  async function refreshMeals() {
+    if (!profile) return;
+    setMealsLoading(true);
+    setMealsError("");
+    try {
+      const res = await fetch("/api/meal-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profile, todayItems }),
+      });
+      if (!res.ok) throw new Error("Failed to fetch meals");
+      const data = await res.json();
+      setMeals(data.meals ?? []);
+    } catch (e) {
+      console.error(e);
+      setMealsError("Could not load suggestions right now.");
+    } finally {
+      setMealsLoading(false);
+    }
+  }
+
   const totals = todayItems.reduce(
     (acc, item) => {
       if (typeof item.approxCaloriesPer100g === "number") {
@@ -45,26 +73,15 @@ export default function Home() {
     setTodayItems((prev) => [...prev, item]);
   }
 
-  async function refreshMeals() {
-    if (!profile) return;
-    setMealsLoading(true);
-    setMealsError("");
-    try {
-      const res = await fetch("/api/meal-plan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profile, todayItems }),
-      });
-      if (!res.ok) throw new Error("Failed to fetch meals");
-      const data = await res.json();
-      setMeals(data.meals ?? []);
-    } catch (e) {
-      console.error(e);
-      setMealsError("Could not load suggestions right now.");
-    } finally {
-      setMealsLoading(false);
+  useEffect(() => {
+    // Refresh meals when todayItems change (after a short delay to batch updates)
+    if (profile && todayItems.length > 0) {
+      const timer = setTimeout(() => {
+        refreshMeals();
+      }, 500);
+      return () => clearTimeout(timer);
     }
-  }
+  }, [todayItems.length]);
 
   return (
     <div className={styles.page}>
@@ -77,9 +94,20 @@ export default function Home() {
               <p>Meal planning that actually fits your life.</p>
             </div>
           </div>
-          <div className={styles.tagline}>
-            <span className={styles.pillDot} />
-            Smart companion, not just a food log.
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div className={styles.tagline}>
+              <span className={styles.pillDot} />
+              Smart companion, not just a food log.
+            </div>
+            {profile && (
+              <a
+                href="/settings"
+                className={styles.searchButton}
+                style={{ paddingInline: 14, height: 32, fontSize: 13 }}
+              >
+                Settings
+              </a>
+            )}
           </div>
         </header>
 

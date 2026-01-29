@@ -51,12 +51,15 @@ Return STRICT JSON only, no extra text, in this shape:
 }
 
 Rules:
-- Use the profile's goal, diet style and target calories to guide choices.
+- ALWAYS return exactly 4 meals: one Breakfast, one Lunch, one Dinner, and one Snack.
+- Use the profile's goal, diet style, target calories, cooking time preference, and meal prep preference to guide choices.
 - Respect any foods to avoid if present (dislikes).
-- Assume the user has basic cooking skills and limited time on weekdays.
+- If cookingTime is "quick", suggest meals that take 15–20 minutes max.
+- If mealPrep is "often", include at least one meal that can be batch-cooked.
 - If todayItems are provided, try to balance the remaining meals so the day
   roughly lands near the target calories instead of repeating the same macros.
 - Prefer simple, realistic meals over elaborate recipes.
+- Each meal's approxCalories should roughly add up to the target calories when combined.
 `;
 
   const payload = {
@@ -77,7 +80,7 @@ Rules:
       {
         role: "user",
         content:
-          "Propose 3–4 meal ideas for the rest of today that align with this profile.",
+          "Propose exactly 4 meals for today: one Breakfast, one Lunch, one Dinner, and one Snack. Make sure they align with the profile's cooking time and meal prep preferences.",
       },
     ].filter(Boolean),
   };
