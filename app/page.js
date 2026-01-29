@@ -119,9 +119,8 @@ export default function Home() {
               and get clear, practical guidance.
             </h2>
             <p className={styles.heroSubtitle}>
-              Start by searching for something you ate today. We&apos;ll use
-              Llama 4 to understand it and estimate calories and macros you can
-              build on.
+              Start by searching for something you ate today. We&apos;ll turn
+              that into estimated calories and macros you can build on.
             </p>
             {profile && (
               <p className={styles.heroSubtitle}>
